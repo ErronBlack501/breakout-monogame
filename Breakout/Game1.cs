@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
 using MonoGame.Extended.Screens;
+using System.Collections.Generic;
 
 namespace Breakout
 {
@@ -12,8 +13,10 @@ namespace Breakout
         private SpriteBatch _spriteBatch;
         private bool _isColliding = false;
         private RectangleF _rectA;
-        private RectangleF _rectB;
-        private float _speed = 200.0f;
+        private CircleF _circle;
+        private List<RectangleF> _bricksList = new List<RectangleF>();
+        private float _ballSpeed = 200.0f;
+        private float _rectangleSpeed = 200.0f;
         
         public Game1()
         {
@@ -25,8 +28,10 @@ namespace Breakout
         protected override void Initialize()
         {
             // TODO: Add your initialization logic here
-            _rectA = new Rectangle(100, 10, 50, 30);
-            _rectB = new Rectangle(100, 100, 200, 100);
+            _circle = new CircleF(new Vector2(_graphics.PreferredBackBufferWidth / 2, _graphics.PreferredBackBufferHeight / 2), 6.0f);
+            BricksInitializer();
+            _rectA = new RectangleF(_graphics.PreferredBackBufferWidth / 2 - (50 / 2.0f), _graphics.PreferredBackBufferHeight - 20, 50, 10);
+
             base.Initialize();
         }
 
@@ -45,41 +50,21 @@ namespace Breakout
             // TODO: Add your update logic here
             var kbState = Keyboard.GetState();
 
-            if (kbState.IsKeyDown(Keys.Up)) 
-            {
-                _rectA.Y -= _speed * gameTime.GetElapsedSeconds();
-            }
-
-            if (kbState.IsKeyDown(Keys.Down))
-            {
-                _rectA.Y += _speed * gameTime.GetElapsedSeconds();
-            }
-
             if (kbState.IsKeyDown(Keys.Left))
             {
-                _rectA.X -= _speed * gameTime.GetElapsedSeconds();
+                _rectA.X -= _rectangleSpeed * gameTime.GetElapsedSeconds();
             }
 
             if (kbState.IsKeyDown(Keys.Right)) 
             {
-                _rectA.X += _speed * gameTime.GetElapsedSeconds();
+                _rectA.X += _rectangleSpeed * gameTime.GetElapsedSeconds();
             }
-
-            if (_rectA.Y <= 0) 
-                _rectA.Y = 0;
-            if (_rectA.Bottom >= _graphics.PreferredBackBufferHeight)
-                _rectA.Y = _graphics.PreferredBackBufferHeight - _rectA.Height;
 
             if (_rectA.X <= 0)
                 _rectA.X = 0;
             if (_rectA.Right >= _graphics.PreferredBackBufferWidth)
                 _rectA.X = _graphics.PreferredBackBufferWidth - _rectA.Width;
 
-            if (_rectA.Intersects(_rectB))
-                _isColliding = true;
-            else
-                _isColliding = false;
-            
             base.Update(gameTime);
         }
 
@@ -89,12 +74,33 @@ namespace Breakout
 
             // TODO: Add your drawing code here
             _spriteBatch.Begin();
+            _spriteBatch.DrawCircle(_circle, 20, Color.White);
+            foreach (var rect in _bricksList)
+            {
+                _spriteBatch.DrawRectangle(rect, Color.White);
+            }
             _spriteBatch.DrawRectangle(_rectA, _isColliding ? Color.Red : Color.White);
-            _spriteBatch.DrawRectangle(_rectB, _isColliding ? Color.Red : Color.White);
+            //_spriteBatch.DrawRectangle(_rectB, _isColliding ? Color.Red : Color.White);
             _spriteBatch.End();
 
 
             base.Draw(gameTime);
+        }
+
+        private void BricksInitializer()
+        {
+            SizeF size = new SizeF(20, 10);
+            Vector2 pos = new Vector2(10, 10);
+            for (int i = 0; i < 5; i++)
+            {
+                for (int j = 0; j < 39; j++)
+                {
+                    _bricksList.Add(new RectangleF(pos, size));
+                    pos.X += size.Width;
+                }
+                pos.X = 10;
+                pos.Y += size.Height;
+            }
         }
     }
 }
