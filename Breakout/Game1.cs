@@ -15,8 +15,8 @@ namespace Breakout
         private RectangleF _rectA;
         private CircleF _circle;
         private List<RectangleF> _bricksList = new List<RectangleF>();
-        private float _ballSpeed = 200.0f;
-        private float _rectangleSpeed = 200.0f;
+        private Vector2 _ballSpeed = new Vector2(100.0f, 100.0f);
+        private float _rectangleSpeed = 300.0f;
         
         public Game1()
         {
@@ -50,20 +50,55 @@ namespace Breakout
             // TODO: Add your update logic here
             var kbState = Keyboard.GetState();
 
-            if (kbState.IsKeyDown(Keys.Left))
+            _circle.Center.X += _ballSpeed.X * gameTime.GetElapsedSeconds();
+            _circle.Center.Y += _ballSpeed.Y * gameTime.GetElapsedSeconds();
+            
+            // ball top, left, right collisions
+            if (_circle.Center.Y <= 0)
+            {
+                _circle.Center.Y = 0;
+                _ballSpeed.Y *= -1.1f;
+            }
+
+            if (_circle.Center.X <= 0)
+            {
+                _circle.Center.X = 0;
+                _ballSpeed.X *= -1.1f;
+            }
+            if (_circle.Center.X + _circle.Radius >= _graphics.PreferredBackBufferWidth)
+            {
+                _circle.Center.X = _graphics.PreferredBackBufferWidth - _circle.Radius;
+                _ballSpeed.X *= -1.1f;
+            }
+
+
+            if (kbState.IsKeyDown(Keys.Q))
             {
                 _rectA.X -= _rectangleSpeed * gameTime.GetElapsedSeconds();
             }
 
-            if (kbState.IsKeyDown(Keys.Right)) 
+            if (kbState.IsKeyDown(Keys.D)) 
             {
                 _rectA.X += _rectangleSpeed * gameTime.GetElapsedSeconds();
             }
+
+            if (_circle.Intersects(_rectA.BoundingRectangle))
+                _ballSpeed.Y *= -1.1f;
+            
 
             if (_rectA.X <= 0)
                 _rectA.X = 0;
             if (_rectA.Right >= _graphics.PreferredBackBufferWidth)
                 _rectA.X = _graphics.PreferredBackBufferWidth - _rectA.Width;
+
+            for (int i = 0; i < _bricksList.Count; i++)
+            {
+                if (_circle.Intersects(_bricksList[i].BoundingRectangle))
+                {
+                    _bricksList.Remove(_bricksList[i]);
+                    _ballSpeed.Y *= -1.1f;
+                }
+            }
 
             base.Update(gameTime);
         }
@@ -80,7 +115,7 @@ namespace Breakout
                 _spriteBatch.DrawRectangle(rect, Color.White);
             }
             _spriteBatch.DrawRectangle(_rectA, _isColliding ? Color.Red : Color.White);
-            //_spriteBatch.DrawRectangle(_rectB, _isColliding ? Color.Red : Color.White);
+
             _spriteBatch.End();
 
 
