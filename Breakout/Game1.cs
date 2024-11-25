@@ -10,8 +10,8 @@ namespace Breakout
     public class Game1 : Game
     {
         private GraphicsDeviceManager _graphics;
+        private ushort _lifes = 3;
         private SpriteBatch _spriteBatch;
-        private bool _isColliding = false;
         private RectangleF _rectA;
         private CircleF _circle;
         private List<RectangleF> _bricksList = new List<RectangleF>();
@@ -57,34 +57,49 @@ namespace Breakout
             if (_circle.Center.Y <= 0)
             {
                 _circle.Center.Y = 0;
-                _ballSpeed.Y *= -1.1f;
+                _ballSpeed.Y *= -1.0f;
+            }
+
+            if (_circle.Center.Y > _graphics.PreferredBackBufferHeight + _circle.Radius)
+            {
+                if (_lifes > 0)
+                    _lifes--;
+                _ballSpeed = new Vector2(100.0f, 100.0f);
+                _circle.Center = new Vector2(_graphics.PreferredBackBufferWidth / 2, _graphics.PreferredBackBufferHeight / 2);
+                _rectA = new RectangleF(_graphics.PreferredBackBufferWidth / 2 - (50 / 2.0f), _graphics.PreferredBackBufferHeight - 20, 50, 10);
+
             }
 
             if (_circle.Center.X <= 0)
             {
                 _circle.Center.X = 0;
-                _ballSpeed.X *= -1.1f;
+                _ballSpeed.X *= -1.0f;
             }
             if (_circle.Center.X + _circle.Radius >= _graphics.PreferredBackBufferWidth)
             {
                 _circle.Center.X = _graphics.PreferredBackBufferWidth - _circle.Radius;
-                _ballSpeed.X *= -1.1f;
+                _ballSpeed.X *= -1.0f;
             }
-
-
-            if (kbState.IsKeyDown(Keys.Q))
+            
+            if (kbState.IsKeyDown(Keys.Left))
             {
                 _rectA.X -= _rectangleSpeed * gameTime.GetElapsedSeconds();
             }
 
-            if (kbState.IsKeyDown(Keys.D)) 
+            if (kbState.IsKeyDown(Keys.Right)) 
             {
                 _rectA.X += _rectangleSpeed * gameTime.GetElapsedSeconds();
             }
 
             if (_circle.Intersects(_rectA.BoundingRectangle))
-                _ballSpeed.Y *= -1.1f;
-            
+            {
+                if (_ballSpeed.Y > 0)
+                {
+                    _ballSpeed.Y *= -1.1f;
+                    //_ballSpeed.X = (_circle.Center.X - _rectA.X) / (_rectA.Width / 2) * _ballSpeed.X;
+                }
+            }
+
 
             if (_rectA.X <= 0)
                 _rectA.X = 0;
@@ -96,7 +111,7 @@ namespace Breakout
                 if (_circle.Intersects(_bricksList[i].BoundingRectangle))
                 {
                     _bricksList.Remove(_bricksList[i]);
-                    _ballSpeed.Y *= -1.1f;
+                    _ballSpeed.Y *= -1.0f;
                 }
             }
 
@@ -109,15 +124,17 @@ namespace Breakout
 
             // TODO: Add your drawing code here
             _spriteBatch.Begin();
-            _spriteBatch.DrawCircle(_circle, 20, Color.White);
-            foreach (var rect in _bricksList)
+            if (_lifes > 0)
             {
-                _spriteBatch.DrawRectangle(rect, Color.White);
+                _spriteBatch.DrawCircle(_circle, 20, Color.White);
+                foreach (var rect in _bricksList)
+                {
+                    _spriteBatch.DrawRectangle(rect, Color.White);
+                }
+                _spriteBatch.DrawRectangle(_rectA, Color.White);
+
             }
-            _spriteBatch.DrawRectangle(_rectA, _isColliding ? Color.Red : Color.White);
-
             _spriteBatch.End();
-
 
             base.Draw(gameTime);
         }
